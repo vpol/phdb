@@ -3,4 +3,4 @@
 __author__ = 'Victor Poluksht'
 
 def Index(request):
-    return {}
+    pass

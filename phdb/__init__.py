@@ -6,6 +6,7 @@ from sqlalchemy.pool import StaticPool
 from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
 from phdb.cache import Cache
+from phdb.loader import file_loader, reindex
 from phdb.models.common import initialize_sql
 from phdb.security import CheckPermissions, MyAuthorisationPolicy
 
@@ -35,6 +36,11 @@ def main(global_config, **settings):
     config.set_session_factory(session_factory)
 
     config.add_static_view('static', 'phdb:static')
+
+    #index = file_loader(config)
+    to_reindex = ['/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-3kh.csv','/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-4kh.csv','/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-8kh.csv','/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_DEF-9kh.csv']
+    if to_reindex:
+        reindex(config, to_reindex)
 
     # Index (main page)
     #config.add_route('Index', '/')

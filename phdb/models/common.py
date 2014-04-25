@@ -13,6 +13,7 @@ meta = declarative_base()
 
 def initialize_sql(engine):
     Session.configure(bind=engine)
+    meta.engine = engine
     meta.metadata.bind = engine
     meta.metadata.create_all(engine)
     meta.session = Session()
