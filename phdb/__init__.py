@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import traceback
 from pyramid.authentication import SessionAuthenticationPolicy
 from pyramid_beaker import session_factory_from_settings
@@ -8,11 +9,13 @@ from sqlalchemy import engine_from_config
 from phdb.cache import Cache
 from phdb.loader import file_loader, reindex
 from phdb.models.common import initialize_sql
-from phdb.security import CheckPermissions, MyAuthorisationPolicy
+# from phdb.security import CheckPermissions, MyAuthorisationPolicy
 
 __author__ = 'Victor Poluksht'
 
-def funcPrint(obj = None):
+log = logging.getLogger(__name__)
+
+def funcname(obj = None):
     '''Вывод текущего метода'''
     stack = traceback.extract_stack()
     scriptName, lineNum, funcName, lineOfCode = stack[-2]
@@ -26,21 +29,23 @@ def main(global_config, **settings):
     """
     engine = engine_from_config(settings, 'sqlalchemy.', connect_args={'check_same_thread':False}, poolclass=StaticPool)
     initialize_sql(engine)
-    authentication_policy = SessionAuthenticationPolicy(callback=CheckPermissions)
-    authorization_policy = MyAuthorisationPolicy()
+    # authentication_policy = SessionAuthenticationPolicy(callback=CheckPermissions)
+    # authorization_policy = MyAuthorisationPolicy()
     session_factory = session_factory_from_settings(settings)
     ## caches
-    settings['cache.example'] = Cache(settings['cache.example'], 'example')
+
     ## end
-    config = Configurator(settings=settings, authentication_policy=authentication_policy, authorization_policy=authorization_policy)
+    config = Configurator(settings=settings)
     config.set_session_factory(session_factory)
+
+    config.add_settings({'cache.example': Cache(settings['cache.example'], 'example')})
 
     config.add_static_view('static', 'phdb:static')
 
-    #index = file_loader(config)
-    to_reindex = ['/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-3kh.csv','/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-4kh.csv','/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-8kh.csv','/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_DEF-9kh.csv']
-    if to_reindex:
-        reindex(config, to_reindex)
+    files = file_loader(config.get_settings()['links'], config.get_settings()['data_path'])
+    log.debug('in {0}: finished loading stage'.format(funcname()))
+    ix = reindex(files, config.get_settings()['ix_path'])
+    config.add_settings({'index': ix})
 
     # Index (main page)
     #config.add_route('Index', '/')

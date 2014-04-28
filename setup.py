@@ -13,7 +13,7 @@ requires = [
     'pyramid_tm',
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
-    'waitress',
+    'waitress', 'whoosh',
     ]
 
 setup(name='phdb',
