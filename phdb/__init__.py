@@ -7,7 +7,7 @@ from sqlalchemy.pool import StaticPool
 from pyramid.config import Configurator
 from sqlalchemy import engine_from_config
 from phdb.cache import Cache
-from phdb.loader import file_loader, reindex
+from phdb.loader import file_loader, reindex, dbload
 from phdb.models.common import initialize_sql
 # from phdb.security import CheckPermissions, MyAuthorisationPolicy
 
@@ -42,13 +42,18 @@ def main(global_config, **settings):
 
     config.add_static_view('static', 'phdb:static')
 
-    files = file_loader(config.get_settings()['links'], config.get_settings()['data_path'])
+    files = file_loader(config.get_settings()['links'], config.get_settings()['data_path'], True)
+    files = ['/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-3kh.csv', '/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-4kh.csv',
+             '/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_ABC-8kh.csv', '/Users/vpol/PycharmProjects/phdb/phdb/data/Kody_DEF-9kh.csv']
     log.debug('in {0}: finished loading stage'.format(funcname()))
-    ix = reindex(files, config.get_settings()['ix_path'])
-    config.add_settings({'index': ix})
+    dbload(files, False)
+    log.debug('in {0}: finished db loading stage'.format(funcname()))
+    ix = reindex(files, config.get_settings()['ix_path'], False)
+    log.debug('in {0}: finished reindex stage'.format(funcname()))
+    config.add_settings({'ix': ix})
 
     # Index (main page)
-    #config.add_route('Index', '/')
-    #config.add_view('phdb.views.Index', route_name = 'Index', renderer='phdb:templates/Index.mako')
+    config.add_route('index', '/')
+    config.add_view('phdb.views.index', route_name = 'index', renderer='json')
 
     return config.make_wsgi_app()
