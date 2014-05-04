@@ -16,7 +16,8 @@ __author__ = 'vpol'
 
 log = logging.getLogger(__name__)
 
-def funcname(obj = None):
+
+def funcname(obj=None):
     '''Вывод текущего метода'''
     stack = traceback.extract_stack()
     scriptName, lineNum, funcName, lineOfCode = stack[-2]
@@ -24,6 +25,7 @@ def funcname(obj = None):
         return '%s.%s()' % (obj.__class__.__name__, funcName)
     else:
         return '%s()' % funcName
+
 
 def file_loader(links, data_path, simulate):
     if simulate:
@@ -42,6 +44,7 @@ def file_loader(links, data_path, simulate):
             files.append(data_path + '/' + file_name)
     return files
 
+
 def dbload(files, simulate):
     if simulate:
         return
@@ -57,7 +60,7 @@ def dbload(files, simulate):
                     continue
                 r = Record()
                 r.code, r.nfrom, r.nto, r.amount, r.operator, r.region = d_line.rstrip().split(';')
-                log.debug('in {0}: r.code = {1}, r.nfrom = {2}, r.nto = {3}, r.amount = {4}, r.operator = {5}, r.region = {6}'.format(funcname(), r.code, r.nfrom, r.nto, r.amount, r.operator, r.region))
+                # log.debug('in {0}: r.code = {1}, r.nfrom = {2}, r.nto = {3}, r.amount = {4}, r.operator = {5}, r.region = {6}'.format(funcname(), r.code, r.nfrom, r.nto, r.amount, r.operator, r.region))
                 if len(to_add) > 1000:
                     session.add_all(to_add)
                     transaction.commit()
@@ -73,7 +76,7 @@ def reindex(files, ix_path, simulate):
     if simulate:
         ix = whoosh.index.open_dir(ix_path)
         return ix
-    schema = Schema(id = NUMERIC(stored=True), operator=TEXT(stored=True), region=TEXT(stored=True))
+    schema = Schema(id=NUMERIC(stored=True), operator=TEXT(stored=True), region=TEXT(stored=True))
     if not os.path.exists(ix_path):
         os.mkdir(ix_path)
     else:
@@ -85,19 +88,10 @@ def reindex(files, ix_path, simulate):
     q = session.query(Record).all()
     for r in q:
         try:
+            # log.debug('in {0}: adding {1}, {2}, {3}'.format(funcname(), r.id, r.operator, r.region))
             writer.add_document(id=r.id, operator=r.operator, region=r.region)
         except whoosh.writing.IndexingError as index_error:
             log.error('in {0}: error adding document {1}'.format(funcname(), index_error))
-        continue
-    # for f in files:
-    #     log.debug('in {0}: processing file {1}'.format(funcname(), f))
-    #     with open(f, encoding='cp1251') as data_file:
-    #         for d_line in data_file:
-    #             code, nfrom, nto, amount, operator, region = d_line.split(';')
-    #             try:
-    #                 writer.add_document(code=code, nfrom=nfrom, nto=nto, operator=operator, region=region)
-    #             except whoosh.writing.IndexingError as index_error:
-    #                 log.error('in {0}: error adding document {1}'.format(funcname(), index_error))
-    #                 continue
-    # writer.commit()
+            continue
+    writer.commit()
     return ix

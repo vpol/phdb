@@ -48,7 +48,7 @@ def main(global_config, **settings):
     log.debug('in {0}: finished loading stage'.format(funcname()))
     dbload(files, False)
     log.debug('in {0}: finished db loading stage'.format(funcname()))
-    ix = reindex(files, config.get_settings()['ix_path'], False)
+    ix = reindex(files, config.get_settings()['ix_path'], True)
     log.debug('in {0}: finished reindex stage'.format(funcname()))
     config.add_settings({'ix': ix})
 
